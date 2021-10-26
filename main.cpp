@@ -1,63 +1,73 @@
-#define CAC_PROJ_NAME "Template"
+#define CAC_PROJ_NAME "Gradual Speed"
 
-#if __APPLE__
-	#include <CacKit>
-	using namespace cocos2d;
-#else
-	#include "win32cac.h"
-#endif
+#include "GameObjectController.h"
 
-class $implement(MenuLayer, MyMenuLayer) {
+class AccelAction : public CCActionInterval {
  public:
-	static inline bool (__thiscall* _init)(MenuLayer* self);
+    static AccelAction* create(PlayerObject* p, float yAccel, float duration=1.0) {
+        auto pRet = new AccelAction();
 
-	void buttonCallback(CCObject* sender) {
-		auto alert = FLAlertLayer::create(NULL, "Mod", "Ok", NULL, "<cg>custom button!</c>");
-		alert->show();
-	}
+        pRet->m_fDuration = duration > 0 ? duration : 0.0001;
+        pRet->m_elapsed = 0;
+        pRet->m_bFirstTick = true;
 
-	bool inithook() {
-		if (!_init(this)) return false;
+        pRet->m_destSpeed = yAccel;
+        pRet->m_srcSpeed = p->_yAccel();
+        pRet->m_player = p;
 
-		auto sprite = CCSprite::create("dialogIcon_017.png");
-		auto buttonSprite = CCSprite::createWithSpriteFrameName("GJ_stopEditorBtn_001.png");
+        return pRet;
+    }
 
-		sprite->setPosition({100, 100});
-		sprite->setScale(0.5f);
+    void update(float dur) override {
+        m_player->_yAccel() = dur*(m_destSpeed-m_srcSpeed)+m_srcSpeed;
+    }
+    virtual void step(float dt) override {
+        if (m_bFirstTick) {
+            m_bFirstTick = false;
+            m_elapsed = 0;
+        } else {
+            m_elapsed += dt;
+        }
+        
+        this->update(m_elapsed / m_fDuration);
+    }
 
-		addChild(sprite);
+    virtual bool isDone() override {
+        return m_elapsed > m_fDuration;
+    }
 
-		auto button = CCMenuItemSpriteExtra::create(
-		    buttonSprite,
-		    this,
-		    menu_selector(MyMenuLayer::buttonCallback));
-
-		auto menu = CCMenu::create();
-		menu->addChild(button);
-		menu->setPosition(ccp(150, 100));
-
-		addChild(menu);
-		return true;
-	}
-
-	#if __APPLE__
-	bool init() {return inithook();}
-	#endif
+ protected:
+    float m_destSpeed;
+    float m_srcSpeed;
+    PlayerObject* m_player;
 };
 
-void inject() {
-	#if _WIN32
-	auto base = reinterpret_cast<uintptr_t>(GetModuleHandle(0));
-	
-	MH_CreateHook(
-	    reinterpret_cast<void*>(base + 0x1907b0),
-		reinterpret_cast<void*>(extract(&MyMenuLayer::inithook)),
-	    reinterpret_cast<void**>(&MyMenuLayer::_init));
 
-	MH_EnableHook(MH_ALL_HOOKS);
-	#endif
+class TestObject : public GameObjectController {
+ public:
+    static TestObject* create(int object_id) {
+        auto pRet = new TestObject();
+        pRet->init(object_id, "ring_01_001.png", kGameObjectTypeSolid);
+
+        return pRet;
+    }
+
+    void onSetup() override {
+        #include "/Users/jakrillis/spwn.c"
+        setTextureFromImage(&spwn_png, spwn_png_len);
+    }
+
+    void onCollision(PlayerObject* p, GJBaseGameLayer* l) override {
+        p->runAction(AccelAction::create(p, 16, 0.3));
+    }
+};
+
+
+void inject() {
+    ObjectManager::enable();
+    ObjectManager::addObject(83, &TestObject::create);
 }
 
 #if _WIN32
-	WIN32CAC_ENTRY(inject)
+    WIN32CAC_ENTRY(inject)
 #endif

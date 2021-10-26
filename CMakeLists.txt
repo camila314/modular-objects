@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(CrossTemplate VERSION 0.1.0 LANGUAGES CXX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-extensions -Xlinker --no-demangle")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-extensions -Xlinker --no-demangle -ferror-limit=500 ")
 set(CMAKE_CXX_STANDARD 17)
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated -Wno-ignored-attributes -O2")
     add_definitions(-DCC_TARGET_OS_MAC)
     include_directories(
         Cacao/
@@ -45,11 +45,20 @@ endif()
 
 add_library(${PROJECT_NAME} SHARED 
     main.cpp
+    ObjectManager.cpp
 )
 
 if(APPLE)
     target_link_directories(${PROJECT_NAME} PRIVATE Cacao)
     target_link_libraries(${PROJECT_NAME} Cacao)
+
+    add_custom_target(Inject)
+    add_custom_command(
+        TARGET  Inject
+        COMMAND sudo osxinj \"Geometry Dash\" *.dylib || true
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Injecting"
+    )
 
     add_custom_command(
         TARGET  ${PROJECT_NAME}

@@ -1,5 +1,5 @@
 #pragma once
-//this code is so fucking ugly please if you can format it
+//this code is so fucking ugly please if you can, format it
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

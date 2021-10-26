@@ -63,6 +63,10 @@
 					"shell_cmd": "make -j4 Cackit",
 				},
 				{
+					"name": "Inject",
+					"shell_cmd": "make -j4 Inject",
+				},
+				{
 					"name": "Cacao",
 					"shell_cmd": "make -j4 Cacao",
 				},
@@ -75,6 +79,18 @@
 					"shell_cmd": "make -j4 GDML",
 				},
 				{
+					"name": "ObjectManager.o",
+					"shell_cmd": "make -j4 ObjectManager.o",
+				},
+				{
+					"name": "ObjectManager.i",
+					"shell_cmd": "make -j4 ObjectManager.i",
+				},
+				{
+					"name": "ObjectManager.s",
+					"shell_cmd": "make -j4 ObjectManager.s",
+				},
+				{
 					"name": "main.o",
 					"shell_cmd": "make -j4 main.o",
 				},
@@ -84,8 +100,8 @@
 				},
 				{
 					"name": "main.s",
-					"shell_cmd": "make -j4 main.s",
-				}
+					"shell_cmd": "make -j4 main.s"
+				},
 			],
 			"working_dir": "${project_path}/build",
 		},
@@ -95,9 +111,6 @@
         {
             "path": ".",
         },
-		{
-			"path": "Cacao",
-		},
 	],
     "settings":
     {
